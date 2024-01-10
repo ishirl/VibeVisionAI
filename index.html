@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Webcam Capture</title>
+<style>
+  /* Styling for the entire body of the page. Sets the font, background color, text alignment, and padding. */
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    text-align: center;
+    padding: 20px;
+  }
+
+  /* Styles for the webcam video element. Adds a border and margin. */
+  #webcam {
+    border: 3px solid #333;
+    margin-bottom: 20px;
+  }
+
+  /* Styles for the form that collects playlist IDs. Sets background color, padding, border radius for rounded corners, shadow for depth, and margin. */
+  #playlistForm {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  /* Styles for input fields in the form. Sets padding, margin, border, border radius, and width. */
+  #playlistForm input[type="text"] {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 250px;
+  }
+
+  /* Styles for the button in the form. Sets padding, background color, text color, border style, border radius, and cursor style. */
+  #playlistForm button {
+    padding: 10px 20px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* Additional styling for the button when hovered over by the mouse. Changes the background color. */
+  #playlistForm button:hover {
+    background-color: #4cae4c;
+  }
+</style>
+</head>
+<body>
+
+<!-- The video element for displaying the webcam feed. -->
+<video id="webcam" autoplay playsinline width="640" height="480"></video>
+<!-- A hidden canvas element for capturing frames from the video. -->
+<canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+
+<!-- Form for entering Spotify playlist IDs for different emotions. Each field corresponds to a specific emotional state. -->
+<form id="playlistForm">
+  <input type="text" id="angry" placeholder="Playlist ID for when angry"><br>
+  <input type="text" id="disgusted" placeholder="Playlist ID for when disgusted"><br>
+  <input type="text" id="fearful" placeholder="Playlist ID for when fearful"><br>
+  <input type="text" id="happy" placeholder="Playlist ID for when happy"><br>
+  <input type="text" id="neutral" placeholder="Playlist ID for when neutral"><br>
+  <input type="text" id="sad" placeholder="Playlist ID for when sad"><br>
+  <input type="text" id="surprised" placeholder="Playlist ID for when surprised"><br>
+  <button type="button" onclick="submitPlaylists()">Submit Playlists</button>
+</form>
+
+<script>
+/* JavaScript code for various functionalities */
+
+// Function to send playlist IDs to the server. It collects values from the form and sends them via POST request.
+function submitPlaylists() {
+  const playlistIds = {
+    angry: document.getElementById('angry').value,
+    disgusted: document.getElementById('disgusted').value,
+    fearful: document.getElementById('fearful').value,
+    happy: document.getElementById('happy').value,
+    neutral: document.getElementById('neutral').value,
+    sad: document.getElementById('sad').value,
+    surprised: document.getElementById('surprised').value,
+  };
+
+  fetch('http://127.0.0.1:5000/playlists', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(playlistIds)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  })
+  .catch(console.error);
+}
+
+// This block of code requests access to the user's webcam and streams it to the video element.
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    document.getElementById('webcam').srcObject = stream;
+  })
+  .catch(console.error);
+
+// Function to capture a frame from the webcam and send it to the server for emotion detection.
+function captureImage() {
+    const canvas = document.getElementById('canvas');
+    const video = document.getElementById('webcam');
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    // Send the captured image to the server
+    fetch('http://127.0.0.1:5000/capture', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: dataUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+    })
+    .catch(console.error);
+}
+
+// Function to trigger playlist playback on the server.
+function callPlayPlaylist() {
+  fetch('http://127.0.0.1:5000/play_playlist', {
+    method: 'GET'
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Playlist should now be playing:', data);
+  })
+  .catch(console.error);
+}
+
+// Timer set to call the play_playlist function after 10 seconds.
+setTimeout(callPlayPlaylist, 10000);
+
+// Interval set to capture an image from the webcam every 4 minutes.
+setInterval(captureImage, 240000);
+</script>
+
+</body>
+</html>
