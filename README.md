@@ -1,4 +1,4 @@
-# VibeVisionAI (Facial Expression Recognition and Automatic Song Player)
+# VibeVisionAI (Real-Time Emotion Analysis for Tailored Music Experience)
 
 **Overview**:
 
