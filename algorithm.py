@@ -11,9 +11,7 @@ import base64
 import os
 
 # Spotify API credentials
-client_id = 'bc14696682fb46d3a891e4dd724b9b59'
-client_secret = '44f96128d98e49648a6d383befc042ff'
-redirect_uri = 'http://localhost:3000'
+
 
 # Function to transform an image for processing with a CNN model
 def transform_image_for_cnn(image_path):
